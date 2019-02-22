@@ -86,7 +86,7 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
     page = None
     curline = None
     
-    for page_id, pageObj in enumerate(resp['fullTextAnnotation']['pages']):
+    for page_id, pageObj in enumerate(resp[0]['fullTextAnnotation']['pages']):
         page = GCVAnnotation(
                     ocr_class='ocr_page',
                     htmlid='page_0',
@@ -103,12 +103,15 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
                     wordText = ""
                     for symbol in wordObj['symbols']:
                         wordText += symbol['text']
-                        detectedBreak = symbol['property']['detectedBreak']
-                        if detectedBreak is not None:
-                            if detectedBreak['type'] == 'SPACE':
-                                wordText += " "
-                            elif detectedBreak['type'] == 'LINE_BREAK':
-                                wordText += " "
+                        # print(wordText)
+                        # detectedBreak = symbol['property']['detectedBreak']
+                        if symbol['property'] is not None:
+                            detectedBreak = symbol['property']['detectedBreak']
+                            if detectedBreak is not None:
+                                if detectedBreak['type'] == 'SPACE':
+                                    wordText += " "
+                                elif detectedBreak['type'] == 'LINE_BREAK':
+                                    wordText += " "
 
                     box = wordObj['boundingBox']['vertices']
                     word = GCVAnnotation(ocr_class='ocrx_word', content=escape(wordText), box=box)
