@@ -18,7 +18,7 @@ class GCVAnnotation:
     <meta name='ocr-system' content='gcv2hocr.py' />
     <meta name='ocr-langs' content='$lang' />
     <meta name='ocr-number-of-pages' content='1' />
-    <meta name='ocr-capabilities' content='ocr_page ocr_carea ocr_line ocrx_word ocrp_lang'/>
+    <meta name='ocr-capabilities' content='ocr_page ocr_carea ocr_par ocr_line ocrx_word ocrp_lang'/>
   </head>
   <body>
     <div class='ocr_page' lang='$lang' title='bbox 0 0 $page_width $page_height'>
@@ -27,11 +27,14 @@ class GCVAnnotation:
   </body>
 </html>
     """),
+        'ocr_par': Template("""
+            <p class='ocr_par' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content
+            </p>"""),
         'ocr_line': Template("""
-            <span class='ocr_line' id='$htmlid' title='bbox $x0 $y0 $x1 $y1; baseline $baseline'>$content
-            </span>"""),
+                <span class='ocr_line' id='$htmlid' title='bbox $x0 $y0 $x1 $y1; baseline $baseline'>$content
+                </span>"""),
         'ocrx_word': Template("""
-                <span class='ocrx_word' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</span>""")
+                    <span class='ocrx_word' id='$htmlid' title='bbox $x0 $y0 $x1 $y1'>$content</span>""")
     }
 
     def __init__(self,
@@ -74,6 +77,13 @@ class GCVAnnotation:
             content = self.content
         return self.__class__.templates[self.ocr_class].substitute(self.__dict__, content=content)
 
+def makePar(page, box):
+    return GCVAnnotation(
+                    ocr_class='ocr_par',
+                    htmlid="par_%d" % (len(page.content)),
+                    content=[],
+                    box=box)
+
 def makeLine(page, box):
     return GCVAnnotation(
                     ocr_class='ocr_line',
@@ -97,8 +107,9 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
             for paragraph in block['paragraphs']:
                 box = paragraph['boundingBox']['vertices']
 
+                curpar = makePar(page, box)
                 curline = makeLine(page, box)
-                
+                newline = 0
                 for wordObj in paragraph['words']:
                     wordText = ""
                     for symbol in wordObj['symbols']:
@@ -112,12 +123,19 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
                                     wordText += " "
                                 elif detectedBreak['type'] == 'LINE_BREAK':
                                     wordText += " "
+                                    newline = 1
 
                     box = wordObj['boundingBox']['vertices']
                     word = GCVAnnotation(ocr_class='ocrx_word', content=escape(wordText), box=box)
                     word.htmlid="word_%d_%d" % (len(page.content) - 1, len(curline.content))
                     curline.content.append(word)
-                page.content.append(curline)
+                    if newline:
+                        curpar.content.append(curline)
+                        curline = makeLine(page, box)
+                        newline = 0
+                if len(curline.content):
+                    curpar.content.append(curline)
+                page.content.append(curpar)
 #        for line in page.content:
             #line.maximize_bbox()
 
