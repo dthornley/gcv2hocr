@@ -22,7 +22,8 @@ class GCVAnnotation:
   </head>
   <body>
     <div class='ocr_page' lang='$lang' title='bbox 0 0 $page_width $page_height'>
-        <div class='ocr_carea' lang='$lang' title='bbox $x0 $y0 $x1 $y1'>$content</div>
+        <div class='ocr_carea' lang='$lang' title='bbox $x0 $y0 $x1 $y1'>$content
+        </div>
     </div>
   </body>
 </html>
