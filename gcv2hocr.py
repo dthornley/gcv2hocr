@@ -135,6 +135,8 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
                                     wordText += " "
                                 elif detectedBreak['type'] == 'LINE_BREAK':
                                     wordText += " "
+                                    # print('Line break found')
+                                    # print(wordText)
                                     newline = 1
 
                     box = wordObj['boundingBox']['vertices']
