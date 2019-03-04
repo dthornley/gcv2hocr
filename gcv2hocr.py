@@ -85,10 +85,10 @@ def makePar(page, box):
                     content=[],
                     box=box)
 
-def makeLine(page, box):
+def makeLine(page, par, box):
     return GCVAnnotation(
                     ocr_class='ocr_line',
-                    htmlid="line_%d" % (len(page.content)),
+                    htmlid="line_%d_%d" % (len(page.content), len(par.content)),
                     content=[],
                     box=box)
 
@@ -118,10 +118,10 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
         
         for block in pageObj['blocks']:
             for paragraph in block['paragraphs']:
-                box = paragraph['boundingBox']['vertices']
-
-                curpar = makePar(page, box)
-                curline = makeLine(page, box)
+                parbox = paragraph['boundingBox']['vertices']
+                curlinebox = parbox
+                curpar = makePar(page, parbox)
+                curline = makeLine(page, curpar, curlinebox)
                 newline = 0
                 for wordObj in paragraph['words']:
                     wordText = ""
@@ -141,12 +141,26 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
                                     newline = 1
 
                     box = wordObj['boundingBox']['vertices']
+
+                    # Can also be a new line of the new top and bottom height are outside the range of the top
+                    # and bottom of the first word on the line.
+                    if curline.content:
+                        curline.maximize_bbox()
+
+                    if curline.content and not (box[2]['y'] <= curline.y1 and box[2]['y'] >= curline.y0):
+
+                        if curline.content:
+                            curline.maximize_bbox()
+                            curpar.content.append(curline)
+                        curline = makeLine(page, curpar, box)
+                        newline = 0
                     word = GCVAnnotation(ocr_class='ocrx_word', content=escape(wordText), box=box)
-                    word.htmlid="word_%d_%d" % (len(page.content) - 1, len(curline.content))
+                    word.htmlid="word_%d_%d_%d" % (len(page.content), len(curpar.content), len(curline.content))
                     curline.content.append(word)
                     if newline:
+                        curline.maximize_bbox()
                         curpar.content.append(curline)
-                        curline = makeLine(page, box)
+                        curline = makeLine(page, curpar, box)
                         newline = 0
                 if len(curline.content):
                     curpar.content.append(curline)
