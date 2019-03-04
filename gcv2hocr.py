@@ -155,8 +155,16 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
             #line.maximize_bbox()
 
         page.maximize_bbox()
-        if not page.page_width: page.page_width = page.x1
-        if not page.page_height: page.page_height = page.y1
+        if not page.page_width:
+            if pageObj['width']:
+                page.page_width = pageObj['width']
+            else:
+                page.page_width = page.x1
+        if not page.page_height:
+            if pageObj['height']:
+                page.page_height = pageObj['height']
+            else:
+                page.page_height = page.y1
         return page
 
 if __name__ == '__main__':
