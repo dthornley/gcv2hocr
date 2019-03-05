@@ -101,13 +101,17 @@ def fromResponse(resp, baseline_tolerance=2, **kwargs):
         return GCVAnnotation(
                     ocr_class='ocr_page',
                     htmlid='page_0',
-                    box=[{"x": 0, "y": 0}, None, {"x": 0, "y": 0}, None]
+                    box=[{"x": 0, "y": 0}, None, {"x": 0, "y": 0}, None],
+                    page_width=0,
+                    page_height=0
         )
     if resp[0]['fullTextAnnotation']['pages'] is None:
         return GCVAnnotation(
                     ocr_class='ocr_page',
                     htmlid='page_0',
-                    box=[{"x": 0, "y": 0}, None, {"x": 0, "y": 0}, None]
+                    box=[{"x": 0, "y": 0}, None, {"x": 0, "y": 0}, None],
+                    page_width=0,
+                    page_height=0
         )
     for page_id, pageObj in enumerate(resp[0]['fullTextAnnotation']['pages']):
         page = GCVAnnotation(
